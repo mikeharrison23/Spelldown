@@ -8,12 +8,11 @@ const fs = require('fs');
 const app = express();
 
 // Configure middleware
-app.use(express.json());
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: true, // Allow all origins in development
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type'],
-  credentials: true
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Error handling middleware
@@ -27,11 +26,19 @@ const httpServer = createServer(app);
 // Configure Socket.IO
 const io = new Server(httpServer, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: true, // Allow all origins in development
     methods: ['GET', 'POST'],
-    credentials: true
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
   },
-  transports: ['polling', 'websocket']
+  transports: ['polling', 'websocket'],
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  cookie: {
+    name: 'io',
+    httpOnly: true,
+    sameSite: 'lax'
+  }
 });
 
 // Import routes and controllers
@@ -239,8 +246,11 @@ app.get('/api/words', (req, res) => {
   }
 });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
+const HOST = '0.0.0.0'; // Listen on all network interfaces
 
-httpServer.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+httpServer.listen(PORT, HOST, () => {
+  console.log(`Server running at http://${HOST}:${PORT}`);
+  console.log('Local access: http://localhost:3001');
+  console.log('Network access: http://192.168.86.59:3001');
 });
