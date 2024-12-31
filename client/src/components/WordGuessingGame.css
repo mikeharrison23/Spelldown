@@ -86,8 +86,9 @@
 .back-button {
   padding: 8px 16px;
   font-size: 16px;
-  color: #333;
-  background-color: #e0e0e0;
+  font-weight: bold;
+  color: white !important;
+  background-color: #34c759 !important;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -95,7 +96,16 @@
 }
 
 .back-button:hover {
-  background-color: #d0d0d0;
+  background-color: #2da94c !important;
+}
+
+button.back-button {
+  background-color: #34c759;
+  color: white;
+}
+
+button.back-button:hover {
+  background-color: #2da94c;
 }
 
 .help-button {
@@ -103,7 +113,7 @@
   height: 30px;
   border-radius: 50%;
   border: none;
-  background-color: #4a90e2;
+  background-color: #34c759;
   color: white;
   font-size: 18px;
   font-weight: bold;
@@ -115,7 +125,7 @@
 }
 
 .help-button:hover {
-  background-color: #357abd;
+  background-color: #2da94c;
 }
 
 .help-popover {
@@ -253,7 +263,7 @@
   font-size: 16px;
   font-weight: bold;
   color: white;
-  background-color: #4a90e2;
+  background-color: #34c759;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -263,7 +273,7 @@
 }
 
 .guess-button:hover:not(:disabled) {
-  background-color: #357abd;
+  background-color: #2da94c;
 }
 
 .guess-button:disabled {
@@ -287,7 +297,7 @@
   font-size: 18px;
   font-weight: bold;
   color: white;
-  background-color: #4a90e2;
+  background-color: #34c759;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -297,7 +307,7 @@
 }
 
 .menu-phase button:hover {
-  background-color: #357abd;
+  background-color: #2da94c;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -351,7 +361,7 @@
   font-size: 18px;
   font-weight: bold;
   color: white;
-  background-color: #4a90e2;
+  background-color: #34c759;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -362,7 +372,7 @@
 }
 
 .setup-phase button:hover:not(:disabled) {
-  background-color: #357abd;
+  background-color: #2da94c;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -387,7 +397,7 @@
   font-size: 16px;
   font-weight: bold;
   color: white;
-  background-color: #4a90e2;
+  background-color: #34c759;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -395,7 +405,7 @@
 }
 
 .submit-word-button:hover:not(:disabled) {
-  background-color: #357abd;
+  background-color: #2da94c;
 }
 
 .submit-word-button:disabled {
@@ -448,6 +458,41 @@
 .guess-input-section,
 .game-board {
   width: 100%;
+}
+
+.gameover-phase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+}
+
+.gameover-phase h2 {
+  color: #333;
+  text-align: center;
+  margin: 0;
+}
+
+.gameover-phase p {
+  color: #666;
+  margin: 0;
+}
+
+.gameover-phase button {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  background-color: #34c759;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gameover-phase button:hover {
+  background-color: #2da94c;
 }
 
 @media (max-width: 768px) {
