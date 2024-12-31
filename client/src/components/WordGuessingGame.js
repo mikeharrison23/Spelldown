@@ -23,6 +23,10 @@ const WordGuessingGame = ({ onBack }) => {
   const [showInstructions, setShowInstructions] = useState(true);
   const [socket, setSocket] = useState(null);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [letterInputs, setLetterInputs] = useState(['', '', '', '', '']);
+  const [wordLetterInputs, setWordLetterInputs] = useState(['', '', '', '', '']);
+  const letterRefs = [useRef(), useRef(), useRef(), useRef(), useRef()];
+  const wordLetterRefs = [useRef(), useRef(), useRef(), useRef(), useRef()];
 
   useEffect(() => {
     // Create a new socket connection
@@ -284,10 +288,16 @@ const WordGuessingGame = ({ onBack }) => {
       return;
     }
 
-    const word = currentWord.toUpperCase();
-    console.log('Submitting word:', word, 'Player:', playerNumber);
-    socket.emit('submitWord', { word, playerNumber });
-    setMyWord(word);
+    console.log('Submitting word:', currentWord);
+    socket.emit('submitWord', {
+      word: currentWord,
+      playerNumber
+    });
+
+    // Clear letter inputs
+    setWordLetterInputs(['', '', '', '', '']);
+    // Store the word for display
+    setMyWord(currentWord);
   };
   
   const handleSubmitGuess = () => {
@@ -306,18 +316,16 @@ const WordGuessingGame = ({ onBack }) => {
       return;
     }
 
-    console.log('Submitting guess:', {
+    console.log('Submitting guess:', currentGuess);
+    socket.emit('makeGuess', {
       gameCode,
-      guess: currentGuess,
-      playerNumber,
-      currentTurn,
-      isMyTurn
+      guess: currentGuess
     });
-    
-    socket.emit('makeGuess', { 
-      gameCode, 
-      guess: currentGuess.toUpperCase()
-    });
+
+    // Clear letter inputs
+    setLetterInputs(['', '', '', '', '']);
+    // Focus first input
+    letterRefs[0].current.focus();
   };
 
   const handlePlayAgain = () => {
@@ -397,25 +405,75 @@ const WordGuessingGame = ({ onBack }) => {
     );
   };
 
+  const handleLetterInput = (index, value) => {
+    if (value.length > 1) return; // Only allow single character
+
+    const newLetterInputs = [...letterInputs];
+    newLetterInputs[index] = value.toUpperCase();
+    setLetterInputs(newLetterInputs);
+
+    // Combine letters to update currentGuess
+    setCurrentGuess(newLetterInputs.join(''));
+
+    // Move to next input if there's a value and not the last box
+    if (value && index < 4) {
+      letterRefs[index + 1].current.focus();
+    }
+  };
+
+  const handleLetterKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !letterInputs[index] && index > 0) {
+      // Move to previous input on backspace if current input is empty
+      letterRefs[index - 1].current.focus();
+    }
+  };
+
+  const handleWordLetterInput = (index, value) => {
+    if (value.length > 1) return;
+
+    const newLetterInputs = [...wordLetterInputs];
+    newLetterInputs[index] = value.toUpperCase();
+    setWordLetterInputs(newLetterInputs);
+
+    // Combine letters to update currentWord
+    setCurrentWord(newLetterInputs.join(''));
+
+    // Move to next input if there's a value and not the last box
+    if (value && index < 4) {
+      wordLetterRefs[index + 1].current.focus();
+    }
+  };
+
+  const handleWordLetterKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !wordLetterInputs[index] && index > 0) {
+      wordLetterRefs[index - 1].current.focus();
+    }
+  };
+
   const renderGuessInput = () => {
     const isDisabled = !isMyTurn || gamePhase !== 'playing';
-    const placeholder = isMyTurn ? 'Enter your guess' : 'Waiting for other player...';
     
     return (
-      <div className="guess-input-container">
-        <input
-          type="text"
-          maxLength={5}
-          placeholder={placeholder}
-          value={currentGuess}
-          onChange={(e) => setCurrentGuess(e.target.value.toUpperCase())}
-          className="guess-input"
-          disabled={isDisabled}
-        />
+      <div className="guess-input-section">
+        <div className="letter-input-container">
+          {letterInputs.map((letter, index) => (
+            <input
+              key={index}
+              ref={letterRefs[index]}
+              type="text"
+              maxLength={1}
+              value={letter}
+              onChange={(e) => handleLetterInput(index, e.target.value)}
+              onKeyDown={(e) => handleLetterKeyDown(index, e)}
+              className={`letter-input ${letter ? 'filled' : ''}`}
+              disabled={isDisabled}
+            />
+          ))}
+        </div>
         <button 
           className="guess-button"
           onClick={handleSubmitGuess}
-          disabled={isDisabled}
+          disabled={isDisabled || currentGuess.length !== 5}
         >
           Guess
         </button>
@@ -516,16 +574,26 @@ const WordGuessingGame = ({ onBack }) => {
           <div className="setup-phase">
             <div className="input-group">
               <label>Enter your 5-letter word:</label>
-              <div className="input-with-button">
-                <input
-                  type="text"
-                  value={currentWord}
-                  onChange={(e) => setCurrentWord(e.target.value.toUpperCase())}
-                  placeholder="Enter your 5-letter word"
-                  maxLength={5}
-                />
-                <button onClick={handleWordSubmit}>Submit Word</button>
+              <div className="letter-input-container">
+                {wordLetterInputs.map((letter, index) => (
+                  <input
+                    key={index}
+                    ref={wordLetterRefs[index]}
+                    type="text"
+                    maxLength={1}
+                    value={letter}
+                    onChange={(e) => handleWordLetterInput(index, e.target.value)}
+                    onKeyDown={(e) => handleWordLetterKeyDown(index, e)}
+                    className={`letter-input ${letter ? 'filled' : ''}`}
+                  />
+                ))}
               </div>
+              <button 
+                onClick={handleWordSubmit}
+                disabled={currentWord.length !== 5}
+              >
+                Submit Word
+              </button>
             </div>
             {message && <div className="message-alert">{message}</div>}
           </div>
