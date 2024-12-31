@@ -349,7 +349,10 @@ const WordGuessingGame = ({ onBack }) => {
 
   const handleLetterClick = (guessIndex, letterIndex, event) => {
     event.preventDefault(); // Prevent default behavior
-    const letterKey = `${guessIndex}-${letterIndex}`;
+    
+    // Use the actual guess word as part of the key to ensure uniqueness
+    const guess = guesses.filter(g => g.playerNumber === playerNumber)[guessIndex];
+    const letterKey = `${guess.word}-${letterIndex}`;
     
     setLetterStates(prevStates => {
       const currentState = prevStates[letterKey] || 'none';
@@ -370,8 +373,9 @@ const WordGuessingGame = ({ onBack }) => {
     });
   };
 
-  const getLetterClass = (guessIndex, letterIndex) => {
-    const state = letterStates[`${guessIndex}-${letterIndex}`];
+  const getLetterClass = (guess, letterIndex) => {
+    const letterKey = `${guess.word}-${letterIndex}`;
+    const state = letterStates[letterKey];
     if (state === 'green') return 'letter-box highlighted-green';
     if (state === 'crossed') return 'letter-box crossed-out';
     return 'letter-box';
@@ -388,7 +392,7 @@ const WordGuessingGame = ({ onBack }) => {
                 {guess.word.split('').map((letter, letterIndex) => (
                   <span
                     key={letterIndex}
-                    className={getLetterClass(guessIndex, letterIndex)}
+                    className={getLetterClass(guess, letterIndex)}
                     onClick={(e) => handleLetterClick(guessIndex, letterIndex, e)}
                     onDoubleClick={(e) => handleLetterClick(guessIndex, letterIndex, e)}
                   >
