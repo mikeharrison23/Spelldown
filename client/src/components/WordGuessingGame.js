@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { SERVER_URL } from '../config';
 import './WordGuessingGame.css';
@@ -92,7 +92,8 @@ const WordGuessingGame = ({ onBack }) => {
 
     newSocket.on('guess-result', ({ guesses: newGuesses, currentTurn }) => {
       console.log('Guess result:', { newGuesses, currentTurn });
-      setGuesses(newGuesses);
+      setGuesses([...newGuesses].reverse());
+      console.log('Updated guesses:', guesses);
       setCurrentTurn(currentTurn);
       const isMyTurnNow = currentTurn === playerNumber;
       setIsMyTurn(isMyTurnNow);
@@ -156,6 +157,10 @@ const WordGuessingGame = ({ onBack }) => {
       }
     };
   }, []); // Empty dependency array since we only want to run this once
+
+  useEffect(() => {
+    console.log('Guesses state updated:', guesses);
+  }, [guesses]);
 
   useEffect(() => {
     if (!socket) return;
@@ -238,6 +243,22 @@ const WordGuessingGame = ({ onBack }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showHowToPlay]);
+
+  useEffect(() => {
+    console.log('Game state:', {
+      phase: gamePhase,
+      player: playerNumber,
+      turn: currentTurn,
+      isMyTurn,
+      guessesCount: guesses.length,
+      guesses: guesses.map(g => ({
+        word: g?.word,
+        player: g?.playerNumber,
+        positions: g?.correctPositions,
+        letters: g?.correctLetters
+      }))
+    });
+  }, [gamePhase, playerNumber, currentTurn, isMyTurn, guesses]);
 
   const validateWord = (word) => {
     return word.length === 5 && /^[a-zA-Z]+$/.test(word);
@@ -402,22 +423,6 @@ const WordGuessingGame = ({ onBack }) => {
     );
   };
 
-  useEffect(() => {
-    console.log('Game state updated:', {
-      phase: gamePhase,
-      playerNumber,
-      currentTurn,
-      isMyTurn,
-      guessesCount: guesses.length,
-      guesses: guesses.map(g => ({
-        word: g?.word,
-        player: g?.playerNumber,
-        positions: g?.correctPositions,
-        letters: g?.correctLetters
-      }))
-    });
-  }, [gamePhase, playerNumber, currentTurn, isMyTurn, guesses]);
-
   const myGuesses = useMemo(() => {
     const filtered = guesses.filter(g => g && g.playerNumber === playerNumber);
     console.log('Computing my guesses:', {
@@ -438,8 +443,7 @@ const WordGuessingGame = ({ onBack }) => {
 
   const latestOpponentGuess = useMemo(() => {
     return guesses
-      .filter(g => g.playerNumber !== playerNumber)
-      .slice(-1)[0];
+      .filter(g => g.playerNumber !== playerNumber)[0];  // Take the first element since array is already reversed
   }, [guesses, playerNumber]);
 
   const renderHeader = () => {
