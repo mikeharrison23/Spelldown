@@ -51,53 +51,71 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
-  width: auto;
-  margin-bottom: 10px;
+  padding: 20px;
+  width: 100%;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
 }
 
-.header-left, .header-right {
+.header-left {
   flex: 1;
+  display: flex;
+  justify-content: flex-start;
 }
 
 .header-center {
+  flex: 2;
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   position: relative;
+}
+
+.header-right {
+  flex: 1;
 }
 
 .game-title {
   margin: 0;
-  font-size: 24px;
+  font-size: 28px;
+  font-weight: bold;
   color: #333;
 }
 
+.back-button {
+  padding: 8px 16px;
+  font-size: 16px;
+  color: #333;
+  background-color: #e0e0e0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background-color: #d0d0d0;
+}
+
 .help-button {
-  position: relative;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background-color: #f0f0f0;
-  border: 2px solid #ccc;
+  border: none;
+  background-color: #4a90e2;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  font-weight: bold;
-  color: #666;
   transition: all 0.2s ease;
-  padding: 0;
-  margin-left: 8px;
 }
 
 .help-button:hover {
-  background-color: #e0e0e0;
-  border-color: #999;
-  color: #333;
+  background-color: #357abd;
 }
 
 .help-popover {
