@@ -151,6 +151,33 @@
   font-size: 24px;
   font-weight: bold;
   text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.letter-box.highlighted-green {
+  background-color: #34c759;
+  border-color: #2da94c;
+  color: white;
+}
+
+.letter-box.crossed-out {
+  position: relative;
+}
+
+.letter-box.crossed-out::after {
+  content: '×';
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 56px;
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.75);
+  pointer-events: none;
+  line-height: 0;
+  font-family: Arial, sans-serif;
 }
 
 .word-display {
