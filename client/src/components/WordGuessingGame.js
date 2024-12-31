@@ -455,28 +455,30 @@ const WordGuessingGame = ({ onBack }) => {
     
     return (
       <div className="guess-input-section">
-        <div className="letter-input-container">
-          {letterInputs.map((letter, index) => (
-            <input
-              key={index}
-              ref={letterRefs[index]}
-              type="text"
-              maxLength={1}
-              value={letter}
-              onChange={(e) => handleLetterInput(index, e.target.value)}
-              onKeyDown={(e) => handleLetterKeyDown(index, e)}
-              className={`letter-input ${letter ? 'filled' : ''}`}
-              disabled={isDisabled}
-            />
-          ))}
+        <div className="guess-row">
+          <div className="guess-word">
+            {letterInputs.map((letter, index) => (
+              <input
+                key={index}
+                ref={letterRefs[index]}
+                type="text"
+                maxLength={1}
+                value={letter}
+                onChange={(e) => handleLetterInput(index, e.target.value)}
+                onKeyDown={(e) => handleLetterKeyDown(index, e)}
+                className={`letter-input ${letter ? 'filled' : ''}`}
+                disabled={isDisabled}
+              />
+            ))}
+          </div>
+          <button 
+            className="guess-button"
+            onClick={handleSubmitGuess}
+            disabled={isDisabled || currentGuess.length !== 5}
+          >
+            Guess
+          </button>
         </div>
-        <button 
-          className="guess-button"
-          onClick={handleSubmitGuess}
-          disabled={isDisabled || currentGuess.length !== 5}
-        >
-          Guess
-        </button>
       </div>
     );
   };

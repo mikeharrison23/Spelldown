@@ -1,22 +1,24 @@
 .letter-input-container {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   justify-content: center;
   margin: 16px 0;
 }
 
 .letter-input {
-  width: 48px;
-  height: 48px;
-  border: 2px solid #ddd;
-  border-radius: 8px;
-  font-size: 28px;
+  width: 40px;
+  height: 40px;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  font-size: 24px;
   font-weight: bold;
   text-align: center;
   text-transform: uppercase;
   background-color: white;
   transition: all 0.2s ease;
   color: #333;
+  padding: 0;
+  margin: 0 2px;
 }
 
 .letter-input:focus {
@@ -154,6 +156,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   user-select: none;
+  background-color: white;
 }
 
 .letter-box.highlighted-green {
@@ -189,16 +192,56 @@
   margin-bottom: 16px;
 }
 
+.game-board {
+  width: 100%;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.guesses-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.guess-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.guess-word {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.guess-input-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 0 auto 20px;
+}
+
 .guess-button {
-  padding: 10px 20px;
+  padding: 8px 16px;
+  height: 40px;
   font-size: 16px;
   font-weight: bold;
   color: white;
   background-color: #4a90e2;
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
+  min-width: 80px;
 }
 
 .guess-button:hover:not(:disabled) {
@@ -208,14 +251,6 @@
 .guess-button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
-}
-
-.guess-input-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
 }
 
 .menu-phase {
@@ -350,51 +385,51 @@
   cursor: not-allowed;
 }
 
-.guesses-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: 400px;
-  margin: 0 auto;
-  padding: 10px;
-}
-
-.guess-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 10px;
-  width: 100%;
-}
-
-.guess-word {
-  display: flex;
-  gap: 4px;
-  justify-content: center;
-}
-
 .correct-count {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   background-color: #34c759;
   color: white;
+  border-radius: 4px;
   font-weight: bold;
-  font-size: 20px;
-  border-radius: 6px;
-  padding: 0 8px;
-  margin-left: 12px;
-  box-shadow: 0 2px 4px rgba(52, 199, 89, 0.2);
-  transition: all 0.2s ease;
 }
 
 .correct-count:hover {
   transform: scale(1.05);
   box-shadow: 0 3px 6px rgba(52, 199, 89, 0.3);
+}
+
+.opponent-guess-section {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.opponent-guess-section h3 {
+  text-align: center;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.game-main {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.guess-input-section {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.opponent-guess-section, 
+.guess-input-section,
+.game-board {
+  width: 100%;
 }
 
 @media (max-width: 768px) {
