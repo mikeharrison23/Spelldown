@@ -1,10 +1,17 @@
 // Socket.IO server configuration
-export const SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://192.168.86.59:3001';
+const getServerUrl = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return window.location.origin;
+  }
+  return process.env.REACT_APP_SERVER_URL || 'http://192.168.86.59:3001';
+};
+
+export const SERVER_URL = getServerUrl();
 
 const config = {
   serverUrl: SERVER_URL,
   socketOptions: {
-    transports: ['websocket', 'polling'],
+    transports: ['polling', 'websocket'],
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
@@ -12,9 +19,7 @@ const config = {
     autoConnect: true,
     forceNew: true,
     withCredentials: true,
-    extraHeaders: {
-      'Access-Control-Allow-Credentials': 'true'
-    }
+    path: '/socket.io/'
   }
 };
 

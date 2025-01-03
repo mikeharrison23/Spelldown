@@ -9,11 +9,13 @@ const app = express();
 
 // Configure middleware
 app.use(cors({
-  origin: true, // Allow all origins in development
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+app.use(express.json());
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -28,21 +30,20 @@ const io = new Server(httpServer, {
   cors: {
     origin: true,
     methods: ['GET', 'POST'],
-    credentials: true
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
   },
   transports: ['polling', 'websocket'],
   pingTimeout: 60000,
-  pingInterval: 25000
-});
-
-// Add global error handler for Socket.IO
-io.engine.on("connection_error", (err) => {
-  console.log('Connection error:', err);
+  pingInterval: 25000,
+  cookie: {
+    name: 'io',
+    httpOnly: true,
+    sameSite: 'lax'
+  }
 });
 
 // Import routes and controllers
-const singlePlayerRoutes = require('./server/routes/singleplayer');
-const multiPlayerRoutes = require('./server/routes/multiplayer');
 const { 
   createGame, 
   joinGame, 
@@ -51,22 +52,16 @@ const {
   handlePlayAgain,
   games,
   playerSessions 
-} = require('./server/controllers/multiplayercontroller');
+} = require('../server/controllers/multiplayercontroller');
 
 // Make io available to the multiplayer controller
 global.io = io;
 
-// Mount routes
-app.use('/api/singleplayer', singlePlayerRoutes);
-app.use('/api/multiplayer', multiPlayerRoutes);
-
-// Serve static files from the React app in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'client/build')));
-}
+// Serve static files from the React build directory
+app.use(express.static(path.join(__dirname, 'build')));
 
 // Load the word list
-const wordList = fs.readFileSync(path.join(__dirname, 'words.txt'), 'utf8')
+const wordList = fs.readFileSync(path.join(__dirname, '..', 'words.txt'), 'utf8')
   .split('\n')
   .map(word => word.trim().toLowerCase())
   .filter(word => word.length === 5);
@@ -78,24 +73,19 @@ const singlePlayerGames = new Map();
 
 // Computer guessing strategy
 function makeComputerGuess(previousGuesses, targetLength = 5) {
-  // Filter words that match the pattern from previous guesses
-  let possibleWords = [...wordList]; // wordList is already lowercase
+  let possibleWords = [...wordList];
 
   for (const guess of previousGuesses) {
     possibleWords = possibleWords.filter(word => {
-      // Check if this word would give the same feedback as the previous guess
       for (let i = 0; i < targetLength; i++) {
-        // If position was correct, word must have same letter in that position
         if (guess.correctPositions[i] && word[i] !== guess.word[i].toLowerCase()) {
           return false;
         }
-        // If position was incorrect but letter exists, word must have that letter somewhere else
         if (!guess.correctPositions[i] && guess.correctLetters.includes(guess.word[i].toLowerCase())) {
           if (!word.includes(guess.word[i].toLowerCase()) || word[i] === guess.word[i].toLowerCase()) {
             return false;
           }
         }
-        // If letter wasn't in word at all, word cannot contain this letter
         if (!guess.correctPositions[i] && !guess.correctLetters.includes(guess.word[i].toLowerCase())) {
           if (word.includes(guess.word[i].toLowerCase())) {
             return false;
@@ -106,13 +96,11 @@ function makeComputerGuess(previousGuesses, targetLength = 5) {
     });
   }
 
-  // If no words match the pattern, return a random word as fallback
   if (possibleWords.length === 0) {
     const randomIndex = Math.floor(Math.random() * wordList.length);
     return wordList[randomIndex];
   }
 
-  // Return a random word from possible words
   const randomIndex = Math.floor(Math.random() * possibleWords.length);
   return possibleWords[randomIndex];
 }
@@ -125,18 +113,15 @@ function checkGuess(guess, targetWord) {
     correctLetters: []
   };
 
-  // Check for correct positions
   for (let i = 0; i < 5; i++) {
     if (guess[i].toLowerCase() === targetWord[i].toLowerCase()) {
       result.correctPositions[i] = true;
     }
   }
 
-  // Check for correct letters in wrong positions
   const remainingTargetLetters = targetWord.toLowerCase().split('');
   const remainingGuessLetters = guess.toLowerCase().split('');
   
-  // Remove exact matches first
   result.correctPositions.forEach((isCorrect, index) => {
     if (isCorrect) {
       remainingTargetLetters[index] = null;
@@ -144,7 +129,6 @@ function checkGuess(guess, targetWord) {
     }
   });
 
-  // Check remaining letters
   remainingGuessLetters.forEach((letter, index) => {
     if (letter === null) return;
     
@@ -171,7 +155,6 @@ io.on('connection', (socket) => {
     console.log('\n=== Socket Disconnected ===');
     console.log('Disconnected:', socket.id);
     
-    // Clean up any game state
     const gameCode = playerSessions.get(socket.id);
     if (gameCode) {
       const game = games.get(gameCode);
@@ -180,7 +163,6 @@ io.on('connection', (socket) => {
         if (game.players.size === 0) {
           games.delete(gameCode);
         } else {
-          // Notify remaining player
           socket.to(gameCode).emit('player-disconnected', {
             message: 'Your opponent has disconnected'
           });
@@ -217,7 +199,22 @@ io.on('connection', (socket) => {
   });
 });
 
-// Debug endpoint to check active games
+// API Routes
+app.get('/api/words', (req, res) => {
+  const filePath = path.join(__dirname, '..', 'words.txt');
+  console.log('Reading words from:', filePath);
+  
+  try {
+    const words = fs.readFileSync(filePath, 'utf8');
+    console.log('Words loaded successfully');
+    res.send(words);
+  } catch (error) {
+    console.error('Error reading words.txt:', error);
+    res.status(500).send('Error reading words file');
+  }
+});
+
+// Debug endpoint
 app.get('/debug/games', (req, res) => {
   const gamesList = Array.from(games.entries()).map(([code, game]) => ({
     code,
@@ -227,26 +224,13 @@ app.get('/debug/games', (req, res) => {
   res.json(gamesList);
 });
 
-// Add words.txt endpoint
-app.get('/api/words', (req, res) => {
-  const filePath = path.join(__dirname, 'words.txt');
-  console.log('Reading words from:', filePath);
-  
-  try {
-    const words = fs.readFileSync(filePath, 'utf8');
-    console.log('Words loaded successfully');
-    console.log('First 100 characters:', words.substring(0, 100));
-    console.log('Total length:', words.length);
-    console.log('Number of lines:', words.split('\n').length);
-    res.send(words);
-  } catch (error) {
-    console.error('Error reading words.txt:', error);
-    res.status(500).send('Error reading words file');
-  }
+// Serve React app for all other routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
 const PORT = process.env.PORT || 3001;
-const HOST = '0.0.0.0'; // Listen on all network interfaces
+const HOST = '0.0.0.0';
 
 httpServer.listen(PORT, HOST, () => {
   console.log(`Server running at http://${HOST}:${PORT}`);

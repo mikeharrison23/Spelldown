@@ -3,6 +3,18 @@ import { io } from 'socket.io-client';
 import { SERVER_URL } from '../config';
 import './WordGuessingGame.css';
 
+const config = {
+  socketOptions: {
+    transports: ['polling', 'websocket'],
+    withCredentials: true,
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+    autoConnect: true,
+    forceNew: true
+  }
+};
+
 const WordGuessingGame = ({ onBack }) => {
   const [gamePhase, setGamePhase] = useState('menu');
   const [gameCode, setGameCode] = useState('');
@@ -30,15 +42,7 @@ const WordGuessingGame = ({ onBack }) => {
 
   useEffect(() => {
     // Create a new socket connection
-    const newSocket = io(SERVER_URL, {
-      transports: ['polling', 'websocket'],
-      withCredentials: true,
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      autoConnect: true,
-      forceNew: true
-    });
+    const newSocket = io(SERVER_URL, config.socketOptions);
 
     setSocket(newSocket);
 
@@ -50,12 +54,22 @@ const WordGuessingGame = ({ onBack }) => {
 
     newSocket.on('connect_error', (error) => {
       console.error('Connection error:', error);
-      setMessage('Connection error. Please try again.');
+      setMessage(`Connection error: ${error.message}`);
     });
 
-    newSocket.on('disconnect', () => {
-      console.log('Disconnected from server');
-      setMessage('Disconnected from server. Trying to reconnect...');
+    newSocket.on('error', (error) => {
+      console.error('Socket error:', error);
+      setMessage(`Socket error: ${error.message}`);
+    });
+
+    newSocket.on('server_error', (error) => {
+      console.error('Server error:', error);
+      setMessage(`Server error: ${error.message}`);
+    });
+
+    newSocket.on('disconnect', (reason) => {
+      console.log('Disconnected from server:', reason);
+      setMessage(`Disconnected from server (${reason}). Trying to reconnect...`);
     });
 
     newSocket.on('game-created', ({ gameCode, playerNumber: pNum }) => {
@@ -138,29 +152,62 @@ const WordGuessingGame = ({ onBack }) => {
       setIsMyTurn(false);
     });
 
-    // Cleanup on unmount
+    newSocket.on('game-over', (data) => {
+      console.log('Game over event received:', data);
+      const { winner, winningWord, guessedBy, wordOwner, guesses } = data;
+      
+      // Update game state
+      setGamePhase('gameover');
+      setWinner(winner);
+      setWinningWord(winningWord);
+      if (guesses) setGuesses(guesses);
+      
+      console.log('Game over state:', {
+        currentPlayer: playerNumber,
+        winner,
+        winningWord,
+        playerState: {
+          myNumber: playerNumber,
+          winner,
+          gamePhase: 'gameover'
+        }
+      });
+
+      // Determine the appropriate message based on player role
+      let winMessage;
+      if (playerNumber === winner) {
+        winMessage = `Congratulations! You won by guessing "${winningWord}"!`;
+        console.log('Setting winner message for player', playerNumber);
+      } else {
+        winMessage = `Game Over! Player ${winner} guessed your word "${winningWord}"!`;
+        console.log('Setting loser message for player', playerNumber);
+      }
+      
+      console.log('Final game over state:', {
+        message: winMessage,
+        myNumber: playerNumber,
+        winner,
+        isWinner: playerNumber === winner
+      });
+      
+      setMessage(winMessage);
+      
+      // Reset play again state
+      setPlayAgainVotes(0);
+      setHasVotedPlayAgain(false);
+      setCurrentGuess('');
+      setIsMyTurn(false);
+    });
+
+    // Clean up on unmount
     return () => {
-      console.log('Cleaning up socket connection');
       if (newSocket) {
-        // Remove all listeners
-        newSocket.off('connect');
-        newSocket.off('connect_error');
-        newSocket.off('disconnect');
-        newSocket.off('game-created');
-        newSocket.off('game-ready');
-        newSocket.off('join-game-success');
-        newSocket.off('word-accepted');
-        newSocket.off('game-started');
-        newSocket.off('guess-result');
-        newSocket.off('play-again-vote');
-        newSocket.off('game-restart');
-        newSocket.off('player-disconnected');
-        
-        // Disconnect the socket
-        newSocket.disconnect();
+        console.log('Cleaning up socket connection');
+        newSocket.removeAllListeners();
+        newSocket.close();
       }
     };
-  }, []); // Empty dependency array since we only want to run this once
+  }, []);
 
   useEffect(() => {
     console.log('Guesses state updated:', guesses);
@@ -256,6 +303,7 @@ const WordGuessingGame = ({ onBack }) => {
       isMyTurn,
       guessesCount: guesses.length,
       guesses: guesses.map(g => ({
+
         word: g?.word,
         player: g?.playerNumber,
         positions: g?.correctPositions,
